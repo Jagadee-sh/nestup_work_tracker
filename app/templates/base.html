@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NestUp Work Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root{--bg:#f5f7fb;--surface:#ffffff;--text:#18212f;--muted:#5f6b7a;--primary:#0b6bcb;--danger:#c0392b;--ok:#1d8f4e;--warning:#b9770e;--border:#dbe2ea;--shadow:0 10px 30px rgba(14,30,37,.08)}
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,sans-serif;background:var(--bg);color:var(--text)}
+    a{text-decoration:none;color:inherit}.wrap{max-width:1240px;margin:auto;padding:24px}.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;box-shadow:var(--shadow);padding:20px}.grid{display:grid;gap:20px}.grid-2{grid-template-columns:repeat(2,minmax(0,1fr))}.grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}.grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:10px;border:none;background:var(--primary);color:#fff;font-weight:600;cursor:pointer}.btn.secondary{background:#eaf2fb;color:var(--primary)}.btn.danger{background:var(--danger)}
+    input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:10px;background:#fff}.label{font-size:14px;font-weight:600;margin:0 0 8px;display:block}.small{font-size:13px;color:var(--muted)}
+    .topbar{background:#0f172a;color:#fff}.topbar .inner{max-width:1240px;margin:auto;padding:16px 24px;display:flex;justify-content:space-between;align-items:center}.pill{padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700}.priority-low{background:#eef6ff;color:#2166b1}.priority-medium{background:#fff6df;color:#956300}.priority-high{background:#ffe8cc;color:#bb5b00}.priority-critical{background:#ffe1e1;color:#c0392b}
+    .status-blocked{background:#fdecec;color:#b42318}.status-in-progress{background:#e8f1ff;color:#0b6bcb}.status-done{background:#e8f7ee;color:#1d8f4e}.flash{padding:12px 14px;border-radius:10px;margin-bottom:12px}.flash.success{background:#eaf7ef;color:#1d8f4e}.flash.error{background:#fdecec;color:#b42318}
+    table{width:100%;border-collapse:collapse} th,td{text-align:left;padding:12px;border-bottom:1px solid var(--border);vertical-align:top} th{font-size:13px;color:var(--muted)}
+    .flow{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.node{padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:#fff;min-width:190px}.arrow{font-weight:800;color:var(--primary)}
+    @media (max-width:900px){.grid-2,.grid-3,.grid-4{grid-template-columns:1fr}.wrap{padding:16px}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="inner">
+      <div>
+        <div style="font-size:20px;font-weight:800">NestUp Work Tracker</div>
+        <div class="small" style="color:#cbd5e1">Python Flask demo for dependency-driven work management</div>
+      </div>
+      {% if user %}
+      <div style="display:flex;gap:12px;align-items:center">
+        <span class="pill" style="background:#1e293b;color:#fff">{{ user.name }} · {{ user.role }}</span>
+        <a class="btn secondary" href="{{ url_for('main.logout') }}">Logout</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+  <main class="wrap">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="grid grid-2">
+  <section class="card">
+    <h1 style="margin-top:0">Login</h1>
+    <p class="small">Use the seeded accounts below or create more members from the admin dashboard after login.</p>
+    <form method="post" class="grid" style="margin-top:18px">
+      <div><label class="label">Email</label><input name="email" required></div>
+      <div><label class="label">Password</label><input type="password" name="password" required></div>
+      <button class="btn" type="submit">Sign in</button>
+    </form>
+  </section>
+  <section class="card">
+    <h2 style="margin-top:0">Demo Accounts</h2>
+    <table>
+      <thead><tr><th>Name</th><th>Role</th><th>Email</th><th>Password</th></tr></thead>
+      <tbody>
+        {% for item in demo_users %}
+        <tr><td>{{ item.name }}</td><td>{{ item.role }}</td><td>{{ item.email }}</td><td>{{ item.password }}</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="small" style="margin-top:12px">Admin can create work items, members, and dependencies. Members can update only their own tasks.</p>
+  </section>
+</div>
+{% endblock %}
