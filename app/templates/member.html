@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="grid grid-2">
+  <section class="card">
+    <h1 style="margin-top:0">My Assigned Work</h1>
+    <div class="grid">
+      {% for item in assigned %}
+      <div style="padding:16px;border:1px solid var(--border);border-radius:14px">
+        <div style="display:flex;justify-content:space-between;gap:10px;align-items:start">
+          <div>
+            <strong>{{ item.title }}</strong>
+            <div class="small">Priority: {{ item.priority }} · Skills: {{ item.skills | map(attribute='name') | join(', ') }}</div>
+          </div>
+          <span class="pill status-{{ item.status }}">{{ item.status }}</span>
+        </div>
+        <p>{{ item.description }}</p>
+        <div class="small">Progress: {{ item.progress }}%</div>
+        <div class="small">Blocked reason: {{ item.blocked_reason or 'None' }}</div>
+        <form method="post" class="grid" style="margin-top:12px">
+          <input type="hidden" name="work_item_id" value="{{ item.id }}">
+          <input type="hidden" name="action" value="update_progress">
+          <div><label class="label">Update progress</label><input type="number" name="progress" min="0" max="100" value="{{ item.progress }}"></div>
+          <button class="btn" type="submit">Save progress</button>
+        </form>
+        <form method="post" class="grid" style="margin-top:10px">
+          <input type="hidden" name="work_item_id" value="{{ item.id }}">
+          <input type="hidden" name="action" value="mark_blocked">
+          <div><label class="label">Mark blocked with reason</label><textarea name="blocked_reason" placeholder="Waiting for API, missing info, environment issue..." required></textarea></div>
+          <button class="btn danger" type="submit">Mark blocked</button>
+        </form>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="card">
+    <h2 style="margin-top:0">My downstream impact</h2>
+    {% if blockers %}
+      <div class="grid">
+        {% for item in blockers %}
+        <div style="padding:16px;border:1px solid var(--border);border-radius:14px">
+          <strong>{{ item.title }}</strong>
+          <div class="small">This task blocks {{ item.downstream_dependencies|length }} downstream item(s).</div>
+          <ul>
+            {% for dep in item.downstream_dependencies %}
+            <li>{{ dep.successor.title }} — {{ dep.dep_type }} at {{ dep.threshold }}%</li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="small">None of your tasks block others right now.</p>
+    {% endif %}
+
+    <div style="margin-top:20px;padding:16px;border:1px dashed var(--border);border-radius:14px">
+      <strong>How unblocking works</strong>
+      <p class="small">When you update your progress, the system recalculates every downstream dependency. Partial dependencies unlock when predecessor progress reaches the threshold. Full dependencies unlock only when the predecessor is 100% complete and marked done.</p>
+    </div>
+  </section>
+</div>
+{% endblock %}

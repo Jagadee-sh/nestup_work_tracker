@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="grid grid-4" style="margin-bottom:20px">
+  <div class="card"><div class="small">Total work items</div><div style="font-size:34px;font-weight:800">{{ work_items|length }}</div></div>
+  <div class="card"><div class="small">Blocked items</div><div style="font-size:34px;font-weight:800">{{ work_items|selectattr('status','equalto','blocked')|list|length }}</div></div>
+  <div class="card"><div class="small">Done items</div><div style="font-size:34px;font-weight:800">{{ work_items|selectattr('status','equalto','done')|list|length }}</div></div>
+  <div class="card"><div class="small">Members</div><div style="font-size:34px;font-weight:800">{{ members|length }}</div></div>
+</div>
+
+<div class="grid grid-3" style="margin-bottom:20px">
+  <section class="card">
+    <h2 style="margin-top:0">Create Member</h2>
+    <form method="post" class="grid">
+      <input type="hidden" name="action" value="create_member">
+      <div><label class="label">Name</label><input name="name" required></div>
+      <div><label class="label">Email</label><input name="email" required></div>
+      <div><label class="label">Password</label><input name="password" required></div>
+      <div><label class="label">Skills</label><select name="skills" multiple size="5">{% for skill in skills %}<option value="{{ skill.name }}">{{ skill.name }}</option>{% endfor %}</select></div>
+      <button class="btn" type="submit">Create member</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2 style="margin-top:0">Create Work Item</h2>
+    <form method="post" class="grid">
+      <input type="hidden" name="action" value="create_work_item">
+      <div><label class="label">Title</label><input name="title" required></div>
+      <div><label class="label">Description</label><textarea name="description" required></textarea></div>
+      <div><label class="label">Priority</label><select name="priority"><option>low</option><option>medium</option><option>high</option><option>critical</option></select></div>
+      <div><label class="label">Assignee</label><select name="assignee_id">{% for member in members %}<option value="{{ member.id }}">{{ member.name }}</option>{% endfor %}</select></div>
+      <div><label class="label">Required Skills</label><select name="skills" multiple size="5">{% for skill in skills %}<option value="{{ skill.name }}">{{ skill.name }}</option>{% endfor %}</select></div>
+      <button class="btn" type="submit">Create work item</button>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2 style="margin-top:0">Create Dependency</h2>
+    <form method="post" class="grid">
+      <input type="hidden" name="action" value="create_dependency">
+      <div><label class="label">Predecessor</label><select name="predecessor_id">{% for item in work_items %}<option value="{{ item.id }}">#{{ item.id }} {{ item.title }}</option>{% endfor %}</select></div>
+      <div><label class="label">Successor</label><select name="successor_id">{% for item in work_items %}<option value="{{ item.id }}">#{{ item.id }} {{ item.title }}</option>{% endfor %}</select></div>
+      <div><label class="label">Type</label><select name="dep_type"><option value="partial">partial</option><option value="full">full</option></select></div>
+      <div><label class="label">Threshold</label><input type="number" name="threshold" min="0" max="100" value="50" required></div>
+      <button class="btn" type="submit">Create dependency</button>
+    </form>
+    <p class="small" style="margin-top:10px">Rule: full must be 100. Partial must be between 1 and 99. Threshold 0 is rejected.</p>
+  </section>
+</div>
+
+<div class="grid grid-2" style="margin-bottom:20px">
+  <section class="card">
+    <h2 style="margin-top:0">Workload & overload</h2>
+    <table>
+      <thead><tr><th>Member</th><th>Skills</th><th>Assigned</th><th>Critical</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for row in workload %}
+      <tr>
+        <td>{{ row.member.name }}</td>
+        <td>{{ row.member.skills | map(attribute='name') | join(', ') }}</td>
+        <td>{{ row.total }}</td>
+        <td>{{ row.critical }}</td>
+        <td>{% if row.overloaded %}<span class="pill status-blocked">Overloaded</span>{% else %}<span class="pill status-done">Balanced</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  <section class="card">
+    <h2 style="margin-top:0">Bottlenecks</h2>
+    {% if bottlenecks %}
+      <div class="grid">
+        {% for item in bottlenecks %}
+        <div style="padding:12px;border:1px solid var(--border);border-radius:12px">
+          <strong>{{ item.title }}</strong>
+          <div class="small">Downstream impact: {{ item.downstream_dependencies|length }} task(s)</div>
+          <div style="margin-top:8px">Progress: {{ item.progress }}%</div>
+        </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="small">No active bottlenecks.</p>
+    {% endif %}
+  </section>
+</div>
+
+<div class="grid grid-2" style="margin-bottom:20px">
+  <section class="card">
+    <h2 style="margin-top:0">All work items</h2>
+    <table>
+      <thead><tr><th>ID</th><th>Title</th><th>Assignee</th><th>Priority</th><th>Progress</th><th>Status</th><th>Blocked reason</th></tr></thead>
+      <tbody>
+      {% for item in work_items %}
+      <tr>
+        <td>#{{ item.id }}</td>
+        <td>{{ item.title }}<div class="small">{{ item.skills | map(attribute='name') | join(', ') }}</div></td>
+        <td>{{ item.assignee.name }}</td>
+        <td><span class="pill priority-{{ item.priority }}">{{ item.priority }}</span></td>
+        <td>{{ item.progress }}%</td>
+        <td><span class="pill status-{{ item.status }}">{{ item.status }}</span></td>
+        <td>{{ item.blocked_reason or '-' }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  <section class="card">
+    <h2 style="margin-top:0">Process flow</h2>
+    <div class="flow">
+      {% for dep in dependencies %}
+        <div class="node">
+          <strong>{{ dep.predecessor.title }}</strong>
+          <div class="small">{{ dep.dep_type }} at {{ dep.threshold }}%</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node">
+          <strong>{{ dep.successor.title }}</strong>
+          <div class="small">Current: {{ dep.successor.status }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+</div>
+{% endblock %}
